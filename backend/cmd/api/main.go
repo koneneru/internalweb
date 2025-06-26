@@ -11,7 +11,7 @@ import (
 	"internalwebBackend/internal/data"
 	"internalwebBackend/internal/jsonlog"
 
-	_ "github.com/denisenkom/go-mssqldb"
+	_ "github.com/alexbrainman/odbc"
 )
 
 type config struct {
@@ -49,6 +49,7 @@ func main() {
 	db, err := openDB(cfg)
 	if err != nil {
 		logger.PrintFatal(err, nil)
+		os.Exit(0)
 	}
 	defer db.Close()
 	logger.PrintInfo("database connection pool established", nil)
@@ -66,7 +67,7 @@ func main() {
 }
 
 func openDB(cfg config) (*sql.DB, error) {
-	db, err := sql.Open("mssql", cfg.db.dsn)
+	db, err := sql.Open("odbc", cfg.db.dsn)
 	if err != nil {
 		return nil, err
 	}
