@@ -3,6 +3,7 @@ package main
 import (
 	"authService/internal/data"
 	"authService/internal/validator"
+	"fmt"
 	"net/http"
 )
 
@@ -26,4 +27,12 @@ func (app *application) createAuthenticationTokenHandler(w http.ResponseWriter, 
 		return
 	}
 
+	user, err := app.models.Users.GetByUsername(input.Username, input.Password)
+	if err != nil {
+		app.logger.PrintError(err, nil)
+		return
+	}
+
+	fmt.Println(user.Name)
+	fmt.Println(len(user.Password.Hash))
 }
