@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	"service/internal/validator"
+	"atsinfoService/internal/validator"
 )
 
 type envelope map[string]any

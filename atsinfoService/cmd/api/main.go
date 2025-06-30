@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
-	"service/internal/data"
-	"service/internal/jsonlog"
+	"atsinfoService/internal/data"
+	"atsinfoService/internal/jsonlog"
 
 	_ "github.com/alexbrainman/odbc"
 )
