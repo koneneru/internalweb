@@ -13,6 +13,7 @@ func (app *application) routes() *httprouter.Router {
 	router.MethodNotAllowed = http.HandlerFunc(app.methodNotAllowedResponse)
 
 	router.HandlerFunc("GET", "/v1/healthcheck", app.healthcheckHandler)
+	router.HandlerFunc("GET", "/v1/calls", app.listCallsHandler)
 
 	return router
 }

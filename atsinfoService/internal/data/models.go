@@ -11,11 +11,11 @@ var (
 )
 
 type Models struct {
-	Entities EntityModel
+	Calls CallModel
 }
 
 func NewModels(db *sql.DB) Models {
 	return Models{
-		Entities: EntityModel{DB: db},
+		Calls: CallModel{DB: db},
 	}
 }

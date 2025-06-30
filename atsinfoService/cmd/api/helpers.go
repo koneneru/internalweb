@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	"atsinfoService/internal/validator"
 )
@@ -128,6 +129,32 @@ func (app *application) readInt(qs url.Values, key string, defaultValue int, v *
 	}
 
 	return i
+}
+
+func (app *application) readDate(qs url.Values, key string, defVal time.Time) time.Time {
+	s := qs.Get(key)
+
+	if s == "" {
+		return defVal
+	}
+
+	layout := "2006-01-02"
+	t, err := time.Parse(layout, s)
+	if err != nil {
+		return defVal
+	}
+
+	return t
+}
+
+func (app *application) readBool(qs url.Values, key string, defVal bool) bool {
+	s := qs.Get(key)
+
+	if s == "" {
+		return defVal
+	}
+
+	return s == "true"
 }
 
 func (app *application) background(fn func()) {
