@@ -9,16 +9,15 @@ import (
 const timeFormat = "2006.01.02 15:04:05"
 
 type Call struct {
-	Id       string `json:"Id"`
-	Ext      string
-	Trk      int
-	Calldate string
-	Duration int
-	Fg       string
-	Cost     float32
-	Ldate    string
-	T        int
-
+	Id          string `json:"Id"`
+	Ext         string
+	Trk         int
+	Calldate    string
+	Duration    int
+	Fg          string
+	Cost        float32
+	Ldate       string
+	T           int
 	Auth        string `json:"-"`
 	Dialeddigit string
 	AccountCode string
@@ -30,7 +29,7 @@ type CallModel struct {
 	DB *sql.DB
 }
 
-func (m CallModel) GetAll(direction, subPhone, gateway, callPhone, intercity string, fromDate, toDate time.Time) ([]*Call, error) {
+func (m CallModel) GetAll(direction, caller, gateway, callee, intercity string, fromDate, toDate time.Time) ([]*Call, error) {
 	query := `SET DATEFORMAT ymd;
 		SET @P1 = ?;
 		SET @P2 = ?;
@@ -48,7 +47,7 @@ func (m CallModel) GetAll(direction, subPhone, gateway, callPhone, intercity str
 			AND (LEN(calls.DIALEDDIGIT) > 5 OR @P7 = 'false')
 		ORDER BY ID DESC`
 
-	args := []any{fromDate.Format(timeFormat), toDate.Format(timeFormat), direction, subPhone, gateway, callPhone, intercity}
+	args := []any{fromDate.Format(timeFormat), toDate.Format(timeFormat), direction, caller, gateway, callee, intercity}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
