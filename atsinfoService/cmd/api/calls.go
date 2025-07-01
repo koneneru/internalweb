@@ -35,7 +35,7 @@ func (app *application) listCallsHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	err = app.writeJSON(w, http.StatusOK, envelope{"calls": calls}, nil)
+	err = app.writeJSON(w, http.StatusOK, envelope{"calls": calls, "total": len(calls)}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
