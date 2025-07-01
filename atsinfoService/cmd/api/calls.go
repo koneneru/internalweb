@@ -24,7 +24,7 @@ func (app *application) listCallsHandler(w http.ResponseWriter, r *http.Request)
 	input.CallPhone = app.readString(qs, "callphone", "")
 	input.SubscriberPhone = app.readString(qs, "subscriber", "")
 	input.Gateway = app.readString(qs, "gateway", "")
-	input.Intercity = app.readString(qs, "intercity", "")
+	input.Intercity = app.readString(qs, "intercity", "false")
 
 	input.FromDate = time.Date(input.FromDate.Year(), input.FromDate.Month(), input.FromDate.Day(), 0, 0, 0, 0, input.FromDate.Location())
 	input.ToDate = time.Date(input.ToDate.Year(), input.ToDate.Month(), input.ToDate.Day(), 23, 59, 59, 0, input.ToDate.Location())

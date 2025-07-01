@@ -31,24 +31,24 @@ type CallModel struct {
 }
 
 func (m CallModel) GetAll(direction, subPhone, gateway, callPhone, intercity string, fromDate, toDate time.Time) ([]*Call, error) {
-	// query := `SET DATEFORMAT ymd;
-	// 	SELECT T, EXT, AUTH, TRK, convert(varchar(20),CALLDATE,20), DURATION, FG, DIALEDDIGIT, ACCOUNTCODE, COST, CLIPNUMBER, CLIPNAME, LDATE, ID
-	// 	FROM ats_Calls as calls
-	// 	WHERE (calls.CALLDATE BETWEEN ? AND ?) AND (calls.FG=? OR ?='')
-	// 		AND (calls.EXT LIKE ? OR ?='') AND (calls.TRK LIKE ? OR ?='') AND (calls.DIALEDDIGIT LIKE ? OR calls.TRK LIKE ? OR ?='')
-	// 		AND (LEN(calls.DIALEDDIGIT)>5 OR ?=0)
-	// 	ORDER BY ID DESC`
-
 	query := `SET DATEFORMAT ymd;
+		SET @P1 = ?;
+		SET @P2 = ?;
+		SET @P3 = ?;
+		SET @P4 = ?;
+		SET @P5 = ?;
+		SET @P6 = ?;
+		SET @P7 = ?;
+
 		SELECT T, EXT, AUTH, TRK, convert(varchar(20),CALLDATE,20), DURATION, FG, DIALEDDIGIT, ACCOUNTCODE, COST, CLIPNUMBER, CLIPNAME, LDATE, ID
 		FROM ats_Calls as calls 
-		WHERE (calls.CALLDATE BETWEEN ? AND ?) AND (calls.FG=? OR ?='')
-			AND (calls.EXT LIKE ? OR ?='') AND (calls.TRK LIKE ? OR ?='') AND (calls.DIALEDDIGIT LIKE ? OR calls.TRK LIKE ? OR ?='')
-			AND (LEN(calls.DIALEDDIGIT)>5 OR ?=0)
+		WHERE (calls.CALLDATE BETWEEN @P1 AND @P2) AND ((@P3 = 'i' AND calls.FG <> 'O') OR calls.FG = @P3 OR @P3= '')
+			AND (calls.EXT LIKE '%' + @P4 + '%' OR @P4 = '') AND (calls.TRK LIKE '%' + @P5 + '%' OR @P5 = '')
+			AND (calls.DIALEDDIGIT LIKE '%' + @P6 + '%' OR calls.TRK LIKE '%' + @P6 + '%' OR @P6 = '')
+			AND (LEN(calls.DIALEDDIGIT) > 5 OR @P7 = 'false')
 		ORDER BY ID DESC`
 
-	args := []any{fromDate.Format(timeFormat), toDate.Format(timeFormat), direction, direction, subPhone, subPhone, gateway, gateway, callPhone, callPhone, callPhone, 0}
-	//args := []any{fromDate.Format(timeFormat), toDate.Format(timeFormat), direction, subPhone, subPhone, gateway, gateway, callPhone, callPhone, callPhone, intercity}
+	args := []any{fromDate.Format(timeFormat), toDate.Format(timeFormat), direction, subPhone, gateway, callPhone, intercity}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -78,24 +78,6 @@ func (m CallModel) GetAll(direction, subPhone, gateway, callPhone, intercity str
 			ClipNumber  sql.NullString
 			ClipName    sql.NullString
 		}
-		// var call Call
-
-		// err := rows.Scan(
-		// 	&call.T,
-		// 	&call.Ext,
-		// 	&call.Auth,
-		// 	&call.Trk,
-		// 	&call.Calldate,
-		// 	&call.Duration,
-		// 	&call.Fg,
-		// 	&call.Dialeddigit,
-		// 	&call.AccountCode,
-		// 	&call.Cost,
-		// 	&call.ClipNumber,
-		// 	&call.ClipName,
-		// 	&call.Ldate,
-		// 	&call.Id,
-		// )
 
 		err := rows.Scan(
 			&input.T,
