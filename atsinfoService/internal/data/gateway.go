@@ -1,6 +1,7 @@
 package data
 
 import (
+	"atsinfoService/internal/validator"
 	"context"
 	"database/sql"
 	"time"
@@ -12,11 +13,23 @@ type Gateway struct {
 	Number     string
 	Digit      int
 	Trunk      int
-	GroupTrunk int
+	TrunkGroup int
 }
 
 type GatewayModel struct {
 	DB *sql.DB
+}
+
+func ValidateGateway(v *validator.Validator, g Gateway) {
+	v.Check(g.Name != "", "name", "must be provided")
+	v.Check(len(g.Name) <= 250, "name", "must not be greater than 250 bytes long")
+
+	v.Check(g.Number != "", "number", "must be provided")
+	v.Check(len(g.Number) <= 12, "number", "must not  be greater than 12 bytes")
+
+	v.Check(g.Digit <= 32_767, "digit", "must not be greater than 32 767")
+	v.Check(g.Trunk <= 32_767, "trunk", "must not be greater than 32 767")
+	v.Check(g.TrunkGroup <= 32_767, "trunkgroup", "must not be greater than 32 767")
 }
 
 func (m GatewayModel) GetAll() ([]*Gateway, error) {
@@ -66,7 +79,7 @@ func (m GatewayModel) GetAll() ([]*Gateway, error) {
 			Number:     input.number.String,
 			Digit:      int(input.digit.Int16),
 			Trunk:      int(input.trunk.Int16),
-			GroupTrunk: int(input.groupTrunk.Int16),
+			TrunkGroup: int(input.groupTrunk.Int16),
 		}
 
 		gateways = append(gateways, &gateway)
@@ -77,4 +90,17 @@ func (m GatewayModel) GetAll() ([]*Gateway, error) {
 	}
 
 	return gateways, err
+}
+
+func (m GatewayModel) Insert(g *Gateway) error {
+	query := `ISERT INTO ats_Trunks (TRUNK, GROUPTRUNK, DIGIT, NAME, NUMBER)
+		VALUES (?,?,?,?,?);
+		SELECT @@IDENTITY AS NewID`
+	args := []any{g.Trunk, g.TrunkGroup, g.Digit, g.Name, g.Number}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	return nil
+	return m.DB.QueryRowContext(ctx, query, args...).Scan(&g.Id)
 }
