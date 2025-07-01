@@ -14,6 +14,7 @@ func (app *application) routes() *httprouter.Router {
 
 	router.HandlerFunc("GET", "/v1/healthcheck", app.healthcheckHandler)
 	router.HandlerFunc("GET", "/v1/calls", app.listCallsHandler)
+	router.HandlerFunc("GET", "/v1/gateways", app.listGatewaysHandler)
 
 	return router
 }
