@@ -21,5 +21,7 @@ func (app *application) routes() *httprouter.Router {
 	router.HandlerFunc(http.MethodPatch, "/v1/gateways/:id", app.editGatewayHandler)
 	router.HandlerFunc(http.MethodDelete, "/v1/gateways/:id", app.deleteGatewayHandler)
 
+	router.HandlerFunc(http.MethodGet, "/v1/subscribers", app.listSubscribersHandler)
+
 	return router
 }
