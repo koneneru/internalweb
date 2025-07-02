@@ -4,6 +4,7 @@ import (
 	"atsinfoService/internal/validator"
 	"context"
 	"database/sql"
+	"errors"
 	"time"
 )
 
@@ -24,12 +25,61 @@ func ValidateGateway(v *validator.Validator, g Gateway) {
 	v.Check(g.Name != "", "name", "must be provided")
 	v.Check(len(g.Name) <= 250, "name", "must not be greater than 250 bytes long")
 
-	v.Check(g.Number != "", "number", "must be provided")
 	v.Check(len(g.Number) <= 12, "number", "must not  be greater than 12 bytes")
-
 	v.Check(g.Digit <= 32_767, "digit", "must not be greater than 32 767")
 	v.Check(g.Trunk <= 32_767, "trunk", "must not be greater than 32 767")
 	v.Check(g.TrunkGroup <= 32_767, "trunkgroup", "must not be greater than 32 767")
+}
+
+func (m GatewayModel) Get(id int64) (*Gateway, error) {
+	if id < 1 {
+		return nil, ErrRecordNotFound
+	}
+
+	query := `
+		SELECT ID, NAME, NUMBER, DIGIT, TRUNK, GROUPTRNK
+		FROM ats_Trunks
+		WHERE ID=?`
+
+	var input struct {
+		Id         int64
+		Name       sql.NullString
+		Number     sql.NullString
+		Digit      sql.NullInt16
+		Trunk      sql.NullInt16
+		TrunkGroup sql.NullInt16
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := m.DB.QueryRowContext(ctx, query, id).Scan(
+		&input.Id,
+		&input.Name,
+		&input.Number,
+		&input.Digit,
+		&input.Trunk,
+		&input.TrunkGroup,
+	)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrRecordNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	var gateway = Gateway{
+		Id:         input.Id,
+		Name:       input.Name.String,
+		Number:     input.Number.String,
+		Digit:      int(input.Digit.Int16),
+		Trunk:      int(input.Trunk.Int16),
+		TrunkGroup: int(input.TrunkGroup.Int16),
+	}
+
+	return &gateway, nil
 }
 
 func (m GatewayModel) GetAll() ([]*Gateway, error) {
@@ -103,4 +153,32 @@ func (m GatewayModel) Insert(g *Gateway) error {
 
 	return nil
 	return m.DB.QueryRowContext(ctx, query, args...).Scan(&g.Id)
+}
+
+func (m GatewayModel) Update(g *Gateway) error {
+	query := `
+		UPDATE ats_Trunks
+		SET TRUNK = ?, GROUPTRNK = ?, DIGIT = ?, Name = ?, Number = ?
+		WHERE ID = ?`
+	args := []any{g.Trunk, g.TrunkGroup, g.Digit, g.Name, g.Number, g.Id}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	return nil
+	result, err := m.DB.ExecContext(ctx, query, args...)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return ErrRecordNotFound
+	}
+
+	return nil
 }

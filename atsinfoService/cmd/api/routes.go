@@ -18,6 +18,7 @@ func (app *application) routes() *httprouter.Router {
 
 	router.HandlerFunc("GET", "/v1/gateways", app.listGatewaysHandler)
 	router.HandlerFunc("POST", "/v1/gateways/add", app.addGatewayHandler)
+	router.HandlerFunc("POST", "/v1/gateways/edit/:id", app.editGatewayHandler)
 
 	return router
 }
