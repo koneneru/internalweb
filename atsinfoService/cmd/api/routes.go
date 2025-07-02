@@ -12,14 +12,14 @@ func (app *application) routes() *httprouter.Router {
 	router.NotFound = http.HandlerFunc(app.notFoundResponse)
 	router.MethodNotAllowed = http.HandlerFunc(app.methodNotAllowedResponse)
 
-	router.HandlerFunc("GET", "/v1/healthcheck", app.healthcheckHandler)
+	router.HandlerFunc(http.MethodGet, "/v1/healthcheck", app.healthcheckHandler)
 
-	router.HandlerFunc("GET", "/v1/calls", app.listCallsHandler)
+	router.HandlerFunc(http.MethodGet, "/v1/calls", app.listCallsHandler)
 
-	router.HandlerFunc("GET", "/v1/gateways", app.listGatewaysHandler)
-	router.HandlerFunc("POST", "/v1/gateways/add", app.addGatewayHandler)
-	router.HandlerFunc("POST", "/v1/gateways/edit/:id", app.editGatewayHandler)
-	router.HandlerFunc("DELETE", "/v1/gateways/delete/:id", app.deleteGatewayHandler)
+	router.HandlerFunc(http.MethodGet, "/v1/gateways", app.listGatewaysHandler)
+	router.HandlerFunc(http.MethodPost, "/v1/gateways", app.addGatewayHandler)
+	router.HandlerFunc(http.MethodPatch, "/v1/gateways/:id", app.editGatewayHandler)
+	router.HandlerFunc(http.MethodDelete, "/v1/gateways/:id", app.deleteGatewayHandler)
 
 	return router
 }
