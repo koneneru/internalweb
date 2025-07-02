@@ -11,13 +11,15 @@ var (
 )
 
 type Models struct {
-	Calls    CallModel
-	Gateways GatewayModel
+	Calls       CallModel
+	Gateways    GatewayModel
+	Subscribers SubscriberModel
 }
 
-func NewModels(db *sql.DB) Models {
+func NewModels(dbs, dbd *sql.DB) Models {
 	return Models{
-		Calls:    CallModel{DB: db},
-		Gateways: GatewayModel{DB: db},
+		Calls:       CallModel{DB: dbs},
+		Gateways:    GatewayModel{DB: dbs},
+		Subscribers: SubscriberModel{DB: dbd},
 	}
 }

@@ -14,15 +14,18 @@ import (
 	_ "github.com/alexbrainman/odbc"
 )
 
+type database struct {
+	dsn          string
+	maxOpenConns int
+	maxIdleConns int
+	maxIdleTime  time.Duration
+}
+
 type config struct {
 	port int
 	env  string
-	db   struct {
-		dsn          string
-		maxOpenConns int
-		maxIdleConns int
-		maxIdleTime  time.Duration
-	}
+	dbd  database
+	dbs  database
 }
 
 type application struct {
@@ -38,43 +41,52 @@ func main() {
 	flag.IntVar(&cfg.port, "port", 9000, "API server port")
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
 
-	flag.StringVar(&cfg.db.dsn, "db-dsn", "", "MSSQL data source name")
-	flag.IntVar(&cfg.db.maxOpenConns, "db-max-open-conns", 25, "MSSQL max open connections")
-	flag.IntVar(&cfg.db.maxIdleConns, "db-max-idle-conns", 25, "MSSQL max idle connections")
-	flag.DurationVar(&cfg.db.maxIdleTime, "db-max-idle-time", 15*time.Minute, "MSSQL max commection idle time")
+	flag.StringVar(&cfg.dbs.dsn, "dbs-dsn", "", "MSSQL SVET data source name")
+	flag.IntVar(&cfg.dbs.maxOpenConns, "dbs-max-open-conns", 25, "MSSQL SVET max open connections")
+	flag.IntVar(&cfg.dbs.maxIdleConns, "dbs-max-idle-conns", 25, "MSSQL SVET max idle connections")
+	flag.DurationVar(&cfg.dbs.maxIdleTime, "dbs-max-idle-time", 15*time.Minute, "MSSQL SVET max commection idle time")
+
+	flag.StringVar(&cfg.dbd.dsn, "dbd-dsn", "", "MSSQL DIRECTUM data source name")
+	flag.IntVar(&cfg.dbd.maxOpenConns, "dbd-max-open-conns", 25, "MSSQL DIRECTUM max open connections")
+	flag.IntVar(&cfg.dbd.maxIdleConns, "dbd-max-idle-conns", 25, "MSSQL DIRECTUM max idle connections")
+	flag.DurationVar(&cfg.dbd.maxIdleTime, "dbd-max-idle-time", 15*time.Minute, "MSSQL DIRECTUM max commection idle time")
 	flag.Parse()
 
 	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
 
-	db, err := openDB(cfg)
-	if err != nil {
-		logger.PrintFatal(err, nil)
-		os.Exit(0)
+	var databases [2]*sql.DB
+	for i, d := range []database{cfg.dbs, cfg.dbd} {
+		db, err := openDB(d)
+		if err != nil {
+			logger.PrintFatal(err, nil)
+			os.Exit(0)
+		}
+		defer db.Close()
+		databases[i] = db
+		logger.PrintInfo("database connection pool established", nil)
 	}
-	defer db.Close()
-	logger.PrintInfo("database connection pool established", nil)
 
 	app := application{
 		config: cfg,
 		logger: logger,
-		models: data.NewModels(db),
+		models: data.NewModels(databases[0], databases[1]),
 	}
 
-	err = app.serve()
+	err := app.serve()
 	if err != nil {
 		logger.PrintFatal(err, nil)
 	}
 }
 
-func openDB(cfg config) (*sql.DB, error) {
-	db, err := sql.Open("odbc", cfg.db.dsn)
+func openDB(dbi database) (*sql.DB, error) {
+	db, err := sql.Open("odbc", dbi.dsn)
 	if err != nil {
 		return nil, err
 	}
 
-	db.SetMaxOpenConns(cfg.db.maxOpenConns)
-	db.SetMaxIdleConns(cfg.db.maxIdleConns)
-	db.SetConnMaxIdleTime(cfg.db.maxIdleTime)
+	db.SetMaxOpenConns(dbi.maxOpenConns)
+	db.SetMaxIdleConns(dbi.maxIdleConns)
+	db.SetConnMaxIdleTime(dbi.maxIdleTime)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
